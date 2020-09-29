@@ -22,13 +22,73 @@ world.load_graph(room_graph)
 
 # Print an ASCII map
 world.print_rooms()
-
+# New player create
 player = Player(world.starting_room)
 
 # Fill this out with directions to walk
 # traversal_path = ['n', 'n']
-traversal_path = []
+# traversal_path = []
+opposite_direction = {
+    'n':'s',
+    's':'n',
+    'w':'e',
+    'e':'w'
+}
 
+#  Get the number of unvisited rooms
+def number_of_unvisited_path(room):
+    unexplored_exits = 0
+
+    for direction in room:
+        if room[direction] == '?':
+            unexplored_exits += 1
+
+    return unexplored_exits
+
+
+# build initial visited dict entry
+def orig_dict_entry_value(visited, room):
+    possible_exits = room.get_exits()
+
+    visited[room.id] ={}
+
+    for move in possible_exits:
+        visited[room.id][move] ='?'
+
+# Traverse the rooms outpupt is a array
+def get_traversal_directions(maze, player):
+    final_directions = []
+    reverse_directions = []
+    visited = {}
+    # starting romm add to dict
+    orig_dict_entry_value(visited, player.current_room.id)
+
+    while len(visited) < len(room_graph):
+        # traverse while unexplored exits are available
+        if number_of_unvisited_path(visited[player.current_room.id]) > 0:
+            for move in player.current_room.get_exits():
+                if visited[player.current_room.id][move] == '?':
+                    prev_room_id = player.current_room.id
+                    backtrack_move = opposite_direction[move]
+                    player.travel(move)
+                    final_directions.append(move)
+                    reverse_directions.append(backtrack_move)
+                    visited[prev_room_id][move] = player.current_room.id
+
+                    if player.current_room.id not in visited:
+                        orig_dict_entry_value(
+                            visited, player.current_room)
+                    visited[player.current_room.id][backtrack_move] = prev_room_id
+                    break
+        # backtack to room unexplored
+        else:
+            backtrack_move = reverse_directions.pop()
+            player.travel(backtrack_move)
+            final_directions.append(backtrack_move)
+    return final_directions
+
+# traversal_path = ['n', 'n']
+traversal_path = get_traversal_directions(world, player)
 
 
 # TRAVERSAL TEST - DO NOT MODIFY
